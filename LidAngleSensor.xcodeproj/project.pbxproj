@@ -271,7 +271,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LidAngleSensor/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lid Angle Sensor Demo";
+				INFOPLIST_KEY_CFBundleDisplayName = "MacBook Accordion";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -305,7 +305,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LidAngleSensor/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lid Angle Sensor Demo";
+				INFOPLIST_KEY_CFBundleDisplayName = "MacBook Accordion";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

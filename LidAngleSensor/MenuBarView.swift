@@ -12,23 +12,14 @@ struct MenuBarView: View {
     @Environment(\.audioController) private var audioController
     
     var body: some View {
-        @Bindable var controller = audioController
-        
         if !sensor.isAvailable {
-            Text("Sensor Not Available")
+            Text("Accordion Unavailable")
         }
         
         Section {
-            Picker("Sound Mode", selection: $controller.mode) {
-                ForEach(AudioMode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
-            }
-            .pickerStyle(.inline)
-            
-            Button(audioController.isPlaying ? "Stop" : "Start") {
-                audioController.toggle()
-            }
+            Text("MacBook Accordion")
+            Text("Note: \(audioController.accordionEngine.noteName)")
+            Text(audioController.isSounding ? "Playing" : "Ready")
         }
         .disabled(!sensor.isAvailable)
         

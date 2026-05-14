@@ -6,10 +6,9 @@ This is a little utility that shows the angle from the sensor and, optionally, p
 
 ## Accordion fork notes
 
-This local fork adds an Accordion audio mode. It maps the lid angle to stepped
-notes, maps lid movement speed to bellows pressure, and uses detuned reed
-oscillators with tremolo to make the MacBook lid behave more like a tiny
-diatonic accordion.
+This local fork turns the app into a tiny MacBook accordion. The lid angle
+selects stepped notes, holding Space opens the air gate, and lid movement adds
+bellows expression through detuned reed oscillators with tremolo.
 
 ## FAQ
 

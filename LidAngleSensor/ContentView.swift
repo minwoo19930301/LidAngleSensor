@@ -6,34 +6,55 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @Environment(\.lidAngleSensor) private var sensor
     @Environment(\.audioController) private var audioController
 
-    @State private var inspectorShown = true
+    @State private var inspectorShown = false
+    @State private var keyDownMonitor: Any?
+    @State private var keyUpMonitor: Any?
 
     var body: some View {
-        @Bindable var controller = audioController
-        @Bindable var creak = audioController.creakEngine
-        @Bindable var theremin = audioController.thereminEngine
         @Bindable var accordion = audioController.accordionEngine
 
         NavigationStack {
-            VStack {
+            VStack(spacing: 26) {
                 if sensor.isAvailable {
-                    Text("\(sensor.angle, format: .number)°")
-                        .foregroundStyle(.blue)
-                        .font(.system(size: 144, weight: .thin))
-                        .tracking(-3)
-
-                    Group {
-                        Text("Velocity: \(String(format: "%+03d", Int(sensor.velocity.rounded()))) deg/s")
-                        Text(sensor.status)
+                    VStack(spacing: 8) {
+                        Text("MacBook Accordion")
+                            .font(.title.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text(audioController.accordionEngine.noteName)
+                            .font(.system(size: 138, weight: .thin, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(audioController.isSounding ? .green : .blue)
+                    }
+                    
+                    AccordionBellowsView(
+                        pressure: audioController.accordionEngine.bellows,
+                        isSounding: audioController.isSounding
+                    )
+                    .frame(width: 360, height: 92)
+                    
+                    HStack(spacing: 12) {
+                        KeycapView(text: "Space")
+                        Text(audioController.isSounding ? "Playing" : "Hold to play")
+                            .font(.headline)
+                            .foregroundStyle(audioController.isSounding ? .green : .secondary)
+                    }
+                    
+                    HStack(spacing: 18) {
+                        Label(audioController.accordionEngine.directionName, systemImage: "arrow.left.and.right")
+                        Label(
+                            "\(String(format: "%+03d", Int(sensor.velocity.rounded()))) deg/s",
+                            systemImage: "wind"
+                        )
                     }
                     .foregroundStyle(.secondary)
                 } else {
-                    Text("Not Available")
+                    Text("Accordion Unavailable")
                         .foregroundStyle(.red)
                         .font(.system(size: 56, weight: .light))
 
@@ -47,103 +68,52 @@ struct ContentView: View {
             .monospacedDigit()
             .onAppear {
                 sensor.start()
+                audioController.start()
+                installKeyMonitors()
+            }
+            .onDisappear {
+                removeKeyMonitors()
+                audioController.stop()
             }
             .onChange(of: sensor.tick) {
                 audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
             }
             .toolbar {
                 ToolbarItemGroup {
-                    Button(
-                        audioController.isPlaying ? "Stop" : "Play",
-                        systemImage: audioController.isPlaying ? "stop" : "play"
-                    ) {
-                        audioController.toggle()
-                    }
-                    .symbolVariant(.fill)
-                    .disabled(!sensor.isAvailable)
-                    .keyboardShortcut(.space, modifiers: [])
-
                     Button {
                         inspectorShown.toggle()
                     } label: {
-                        Label("Audio Controls", systemImage: "slider.horizontal.3")
+                        Label("Tone Controls", systemImage: "slider.horizontal.3")
                     }
                 }
             }
             .inspector(isPresented: $inspectorShown) {
                 Form {
-                    Section {
-                        Picker("Audio Mode", selection: $controller.mode) {
-                            ForEach(AudioMode.allCases) { m in
-                                Text(m.rawValue).tag(m)
-                            }
-                        }
-
-                        switch audioController.mode {
-                        case .accordion:
-                            LabeledContent("Note", value: audioController.accordionEngine.noteName)
-                            LabeledContent("Direction", value: audioController.accordionEngine.directionName)
-                            LabeledContent("Bellows", value: audioController.accordionEngine.bellows, format: .number.precision(.fractionLength(2)))
-                            LabeledContent("Volume", value: audioController.accordionEngine.volume, format: .number.precision(.fractionLength(2)))
-                        case .creak:
-                            LabeledContent("Gain", value: audioController.creakEngine.gain, format: .number.precision(.fractionLength(2)))
-                            LabeledContent("Rate", value: audioController.creakEngine.rate, format: .number.precision(.fractionLength(2)))
-                        case .theremin:
-                            LabeledContent("Frequency", value: audioController.thereminEngine.frequency, format: .number.precision(.fractionLength(1)))
-                            LabeledContent("Volume", value: audioController.thereminEngine.volume, format: .number.precision(.fractionLength(2)))
-                        }
+                    Section("Status") {
+                        LabeledContent("Note", value: audioController.accordionEngine.noteName)
+                        LabeledContent("Direction", value: audioController.accordionEngine.directionName)
+                        LabeledContent("Air", value: audioController.accordionEngine.bellows, format: .number.precision(.fractionLength(2)))
+                        LabeledContent("Volume", value: audioController.accordionEngine.volume, format: .number.precision(.fractionLength(2)))
                     }
 
-                    switch audioController.mode {
-                    case .accordion:
-                        Section("Bellows") {
-                            ParameterSlider(label: "Full Volume", value: $accordion.velocityFull, range: 8...160, unit: "deg/s", fractionDigits: 0)
-                            ParameterSlider(label: "Deadzone", value: $accordion.velocityDeadzone, range: 0...8, unit: "deg/s", fractionDigits: 1)
-                            ParameterSlider(label: "Max Volume", value: $accordion.maxVolume, range: 0...1, fractionDigits: 2)
-                        }
-                        Section("Reeds") {
-                            ParameterSlider(label: "Detune", value: $accordion.detuneCents, range: 0...28, unit: "cents", fractionDigits: 1)
-                            ParameterSlider(label: "Brightness", value: $accordion.brightness, range: 0...1, fractionDigits: 2)
-                            ParameterSlider(label: "Bass Mix", value: $accordion.bassMix, range: 0...0.6, fractionDigits: 2)
-                        }
-                        Section("Musette") {
-                            ParameterSlider(label: "Rate", value: $accordion.tremoloRate, range: 0...12, unit: "Hz", fractionDigits: 1)
-                            ParameterSlider(label: "Depth", value: $accordion.tremoloDepth, range: 0...0.35, fractionDigits: 2)
-                        }
-                        Section("Ramping") {
-                            ParameterSlider(label: "Note", value: $accordion.noteRampMs, range: 5...160, unit: "ms", fractionDigits: 0)
-                            ParameterSlider(label: "Volume", value: $accordion.volumeRampMs, range: 10...500, unit: "ms", fractionDigits: 0)
-                        }
-                    case .creak:
-                        Section("Velocity") {
-                            ParameterSlider(label: "Full Volume", value: $creak.velocityFull, range: 1...100, unit: "deg/s", fractionDigits: 0)
-                            ParameterSlider(label: "Quiet", value: $creak.velocityQuiet, range: 10...300, unit: "deg/s", fractionDigits: 0)
-                        }
-                        Section("Pitch") {
-                            ParameterSlider(label: "Min Rate", value: $creak.minRate, range: 0.5...1.0, unit: "×", fractionDigits: 2)
-                            ParameterSlider(label: "Max Rate", value: $creak.maxRate, range: 1.0...2.0, unit: "×", fractionDigits: 2)
-                        }
-                        Section("Ramping") {
-                            ParameterSlider(label: "Gain", value: $creak.gainRampMs, range: 10...500, unit: "ms", fractionDigits: 0)
-                            ParameterSlider(label: "Rate", value: $creak.rateRampMs, range: 10...500, unit: "ms", fractionDigits: 0)
-                        }
-                    case .theremin:
-                        Section("Frequency") {
-                            ParameterSlider(label: "Min", value: $theremin.minFrequency, range: 55...880, unit: "Hz", fractionDigits: 0)
-                            ParameterSlider(label: "Max", value: $theremin.maxFrequency, range: 110...2000, unit: "Hz", fractionDigits: 0)
-                        }
-                        Section("Volume") {
-                            ParameterSlider(label: "Base", value: $theremin.baseVolume, range: 0...1, fractionDigits: 2)
-                            ParameterSlider(label: "Velocity Boost", value: $theremin.velocityVolumeBoost, range: 0...1, fractionDigits: 2)
-                        }
-                        Section("Vibrato") {
-                            ParameterSlider(label: "Rate", value: $theremin.vibratoFreq, range: 0...20, unit: "Hz", fractionDigits: 1)
-                            ParameterSlider(label: "Depth", value: $theremin.vibratoDepth, range: 0...0.15, fractionDigits: 3)
-                        }
-                        Section("Ramping") {
-                            ParameterSlider(label: "Frequency", value: $theremin.frequencyRampMs, range: 5...300, unit: "ms", fractionDigits: 0)
-                            ParameterSlider(label: "Volume", value: $theremin.volumeRampMs, range: 5...300, unit: "ms", fractionDigits: 0)
-                        }
+                    Section("Air") {
+                        ParameterSlider(label: "Key Pressure", value: $accordion.keyPressure, range: 0.1...1.0, fractionDigits: 2)
+                        ParameterSlider(label: "Motion Boost", value: $accordion.velocityFull, range: 8...160, unit: "deg/s", fractionDigits: 0)
+                        ParameterSlider(label: "Deadzone", value: $accordion.velocityDeadzone, range: 0...8, unit: "deg/s", fractionDigits: 1)
+                        ParameterSlider(label: "Max Volume", value: $accordion.maxVolume, range: 0...1, fractionDigits: 2)
+                    }
+                    Section("Reeds") {
+                        ParameterSlider(label: "Detune", value: $accordion.detuneCents, range: 0...28, unit: "cents", fractionDigits: 1)
+                        ParameterSlider(label: "Brightness", value: $accordion.brightness, range: 0...1, fractionDigits: 2)
+                        ParameterSlider(label: "Bass Mix", value: $accordion.bassMix, range: 0...0.6, fractionDigits: 2)
+                    }
+                    Section("Musette") {
+                        ParameterSlider(label: "Rate", value: $accordion.tremoloRate, range: 0...12, unit: "Hz", fractionDigits: 1)
+                        ParameterSlider(label: "Depth", value: $accordion.tremoloDepth, range: 0...0.35, fractionDigits: 2)
+                    }
+                    Section("Ramping") {
+                        ParameterSlider(label: "Note", value: $accordion.noteRampMs, range: 5...160, unit: "ms", fractionDigits: 0)
+                        ParameterSlider(label: "Volume", value: $accordion.volumeRampMs, range: 10...500, unit: "ms", fractionDigits: 0)
                     }
 
                     Section {
@@ -158,5 +128,90 @@ struct ContentView: View {
         }
         .frame(minWidth: 800, minHeight: 400)
         .frame(idealWidth: 900, idealHeight: 667)
+    }
+
+    private func installKeyMonitors() {
+        guard keyDownMonitor == nil, keyUpMonitor == nil else { return }
+
+        keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.keyCode == 49 else { return event }
+            if !event.isARepeat {
+                audioController.setSounding(true)
+                audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
+            }
+            return nil
+        }
+
+        keyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
+            guard event.keyCode == 49 else { return event }
+            audioController.setSounding(false)
+            audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
+            return nil
+        }
+    }
+
+    private func removeKeyMonitors() {
+        if let keyDownMonitor {
+            NSEvent.removeMonitor(keyDownMonitor)
+            self.keyDownMonitor = nil
+        }
+
+        if let keyUpMonitor {
+            NSEvent.removeMonitor(keyUpMonitor)
+            self.keyUpMonitor = nil
+        }
+    }
+}
+
+private struct AccordionBellowsView: View {
+    let pressure: Double
+    let isSounding: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.blue.opacity(isSounding ? 0.9 : 0.45))
+                .frame(width: 66)
+
+            ZStack {
+                ForEach(0..<9, id: \.self) { index in
+                    let x = Double(index - 4) * 24.0
+                    Rectangle()
+                        .fill(.secondary.opacity(0.35 + pressure * 0.45))
+                        .frame(width: 5)
+                        .rotationEffect(.degrees(index.isMultiple(of: 2) ? 13 : -13))
+                        .offset(x: x)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .background(.quaternary.opacity(0.7))
+
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.green.opacity(isSounding ? 0.9 : 0.45))
+                .frame(width: 66)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(.secondary.opacity(0.35), lineWidth: 1)
+        }
+        .animation(.easeOut(duration: 0.12), value: pressure)
+        .animation(.easeOut(duration: 0.12), value: isSounding)
+    }
+}
+
+private struct KeycapView: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.headline.monospaced())
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .background(.quaternary)
+            .clipShape(RoundedRectangle(cornerRadius: 7))
+            .overlay {
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(.secondary.opacity(0.4), lineWidth: 1)
+            }
     }
 }

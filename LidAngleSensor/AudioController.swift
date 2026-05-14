@@ -25,59 +25,42 @@ final class AudioController {
     
     // MARK: Published State
     
-    private(set) var isPlaying = false
-    
-    var mode: AudioMode = .accordion {
-        didSet {
-            guard oldValue != mode else { return }
-            modeDidChange(from: oldValue)
-        }
-    }
+    private(set) var isReady = false
+    private(set) var isSounding = false
     
     // MARK: Engines
     
-    let creakEngine = CreakAudioEngine()
-    let thereminEngine = ThereminAudioEngine()
     let accordionEngine = AccordionAudioEngine()
     
     // MARK: Control
     
-    func toggle() {
-        if isPlaying {
-            engine(for: mode).stop()
-        } else {
-            engine(for: mode).start()
+    func start() {
+        guard !isReady else { return }
+        accordionEngine.start()
+        isReady = true
+    }
+
+    func stop() {
+        guard isReady else { return }
+        setSounding(false)
+        accordionEngine.stop()
+        isReady = false
+    }
+
+    func setSounding(_ isSounding: Bool) {
+        guard self.isSounding != isSounding else { return }
+        self.isSounding = isSounding
+        if !isSounding {
+            accordionEngine.mute()
         }
-        isPlaying.toggle()
     }
     
     func feed(angle: Double, velocity: Double) {
-        guard isPlaying else { return }
-        switch mode {
-        case .accordion:
-            accordionEngine.update(angle: angle, velocity: velocity)
-        case .creak:
-            creakEngine.update(velocity: velocity)
-        case .theremin:
-            thereminEngine.update(angle: angle, velocity: velocity)
-        }
+        guard isReady else { return }
+        accordionEngine.update(angle: angle, velocity: velocity, isGateOpen: isSounding)
     }
     
     // MARK: Private
     
-    var activeEngine: any AudioEngineProtocol { engine(for: mode) }
-    
-    private func engine(for mode: AudioMode) -> any AudioEngineProtocol {
-        switch mode {
-        case .accordion: accordionEngine
-        case .creak:    creakEngine
-        case .theremin: thereminEngine
-        }
-    }
-    
-    private func modeDidChange(from oldMode: AudioMode) {
-        guard isPlaying else { return }
-        engine(for: oldMode).stop()
-        engine(for: mode).start()
-    }
+    var activeEngine: any AudioEngineProtocol { accordionEngine }
 }

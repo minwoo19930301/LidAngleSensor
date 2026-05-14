@@ -47,6 +47,7 @@ final class AccordionAudioEngine: AudioEngineProtocol {
     // MARK: Parameters
 
     var maxVolume = 0.82
+    var keyPressure = 0.62
     var velocityFull = 48.0
     var velocityDeadzone = 1.5
     var detuneCents = 11.0
@@ -100,6 +101,11 @@ final class AccordionAudioEngine: AudioEngineProtocol {
         guard isRunning else { return }
         engine.stop()
         isRunning = false
+        mute()
+    }
+
+    func mute() {
+        targetVolume = 0
         volume = 0
         bellows = 0
         renderVolume = 0
@@ -109,6 +115,7 @@ final class AccordionAudioEngine: AudioEngineProtocol {
 
     func resetToDefaults() {
         maxVolume = 0.82
+        keyPressure = 0.62
         velocityFull = 48.0
         velocityDeadzone = 1.5
         detuneCents = 11.0
@@ -122,7 +129,7 @@ final class AccordionAudioEngine: AudioEngineProtocol {
 
     // MARK: Parameter Update
 
-    func update(angle: Double, velocity: Double) {
+    func update(angle: Double, velocity: Double, isGateOpen: Bool) {
         let normalizedAngle = min(1, max(0, (angle - Self.minAngle) / (Self.maxAngle - Self.minAngle)))
         let noteIndex = min(Self.scaleMidi.count - 1, max(0, Int((normalizedAngle * Double(Self.scaleMidi.count - 1)).rounded())))
         let midi = Self.scaleMidi[noteIndex]
@@ -131,14 +138,16 @@ final class AccordionAudioEngine: AudioEngineProtocol {
         noteName = Self.noteName(forMIDINote: midi)
 
         let speed = abs(velocity)
-        if speed <= velocityDeadzone {
+        if !isGateOpen {
             bellows = 0
             targetVolume = 0
         } else {
-            let t = min(1, max(0, (speed - velocityDeadzone) / max(1, velocityFull - velocityDeadzone)))
+            let t = speed <= velocityDeadzone
+                ? 0
+                : min(1, max(0, (speed - velocityDeadzone) / max(1, velocityFull - velocityDeadzone)))
             let shaped = t * t * (3 - 2 * t)
-            bellows = shaped
-            targetVolume = shaped * maxVolume
+            bellows = min(1, keyPressure + shaped * (1 - keyPressure))
+            targetVolume = bellows * maxVolume
         }
 
         if velocity < -velocityDeadzone {

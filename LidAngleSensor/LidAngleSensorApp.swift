@@ -13,7 +13,7 @@ struct LidAngleSensorApp: App {
     @State private var audioController = AudioController()
     
     var body: some Scene {
-        Window("Lid Angle Sensor", id: "main") {
+        Window("MacBook Accordion", id: "main") {
             ContentView()
                 .environment(\.lidAngleSensor, sensor)
                 .environment(\.audioController, audioController)
@@ -24,7 +24,7 @@ struct LidAngleSensorApp: App {
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(after: .appInfo) {
-                Link(destination: URL(string: "https://github.com/samhenrigold/LidAngleSensor")!) {
+                Link(destination: URL(string: "https://github.com/minwoo19930301/LidAngleSensor")!) {
                     Label("View Source", systemImage: "swift")
                 }
             }
@@ -35,10 +35,10 @@ struct LidAngleSensorApp: App {
                 .environment(\.lidAngleSensor, sensor)
                 .environment(\.audioController, audioController)
         } label: {
-            Image(systemName: "angle")
+            Image(systemName: "music.note")
             
             if sensor.isAvailable {
-                Text("\(sensor.angle, format: .number.precision(.fractionLength(0)))°")
+                Text(audioController.accordionEngine.noteName)
                     .monospacedDigit()
             }
         }
