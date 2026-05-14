@@ -1,8 +1,11 @@
-# Lid Angle Sensor
+# MacBook Accordion
 
-Hi, I’m Sam Gold. Did you know that you have ~rights~ a lid angle sensor in your MacBook? [The ~Constitution~ human interface device utility says you do.](https://youtu.be/wqnHtGgVAUE?t=21)
+This is a fork of Sam Gold's Lid Angle Sensor app that turns a MacBook lid into
+a tiny accordion-style instrument.
 
-This is a little utility that shows the angle from the sensor and, optionally, plays a wooden door creaking sound if you adjust it reeaaaaaal slowly.
+Move the lid to choose a note, then hold Space to let the note sound. Releasing
+Space mutes the reeds, so you can move through silent notes and only play the
+ones you want.
 
 ## Accordion fork notes
 
