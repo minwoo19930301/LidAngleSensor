@@ -4,6 +4,13 @@ Hi, I’m Sam Gold. Did you know that you have ~rights~ a lid angle sensor in yo
 
 This is a little utility that shows the angle from the sensor and, optionally, plays a wooden door creaking sound if you adjust it reeaaaaaal slowly.
 
+## Accordion fork notes
+
+This local fork adds an Accordion audio mode. It maps the lid angle to stepped
+notes, maps lid movement speed to bellows pressure, and uses detuned reed
+oscillators with tremolo to make the MacBook lid behave more like a tiny
+diatonic accordion.
+
 ## FAQ
 
 **What is a lid angle sensor?**

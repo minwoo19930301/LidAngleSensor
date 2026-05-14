@@ -6,6 +6,7 @@
 //
 
 enum AudioMode: String, CaseIterable, Identifiable {
+    case accordion = "Accordion"
     case creak = "Creak"
     case theremin = "Theremin"
     var id: Self { self }

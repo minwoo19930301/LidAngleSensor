@@ -110,8 +110,9 @@ final class ThereminAudioEngine: AudioEngineProtocol {
         targetFrequency = minFrequency + ratio * (maxFrequency - minFrequency)
 
         var boost = 0.0
-        if velocity > 0 {
-            let t = min(1, max(0, velocity / velocityQuiet))
+        let speed = abs(velocity)
+        if speed > 0 {
+            let t = min(1, max(0, speed / velocityQuiet))
             let s = t * t * (3 - 2 * t)
             boost = (1 - s) * velocityVolumeBoost
         }

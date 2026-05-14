@@ -17,6 +17,7 @@ struct ContentView: View {
         @Bindable var controller = audioController
         @Bindable var creak = audioController.creakEngine
         @Bindable var theremin = audioController.thereminEngine
+        @Bindable var accordion = audioController.accordionEngine
 
         NavigationStack {
             VStack {
@@ -27,7 +28,7 @@ struct ContentView: View {
                         .tracking(-3)
 
                     Group {
-                        Text("Velocity: \(String(format: "%02d", Int(sensor.velocity.rounded()))) deg/s")
+                        Text("Velocity: \(String(format: "%+03d", Int(sensor.velocity.rounded()))) deg/s")
                         Text(sensor.status)
                     }
                     .foregroundStyle(.secondary)
@@ -79,6 +80,11 @@ struct ContentView: View {
                         }
 
                         switch audioController.mode {
+                        case .accordion:
+                            LabeledContent("Note", value: audioController.accordionEngine.noteName)
+                            LabeledContent("Direction", value: audioController.accordionEngine.directionName)
+                            LabeledContent("Bellows", value: audioController.accordionEngine.bellows, format: .number.precision(.fractionLength(2)))
+                            LabeledContent("Volume", value: audioController.accordionEngine.volume, format: .number.precision(.fractionLength(2)))
                         case .creak:
                             LabeledContent("Gain", value: audioController.creakEngine.gain, format: .number.precision(.fractionLength(2)))
                             LabeledContent("Rate", value: audioController.creakEngine.rate, format: .number.precision(.fractionLength(2)))
@@ -89,6 +95,25 @@ struct ContentView: View {
                     }
 
                     switch audioController.mode {
+                    case .accordion:
+                        Section("Bellows") {
+                            ParameterSlider(label: "Full Volume", value: $accordion.velocityFull, range: 8...160, unit: "deg/s", fractionDigits: 0)
+                            ParameterSlider(label: "Deadzone", value: $accordion.velocityDeadzone, range: 0...8, unit: "deg/s", fractionDigits: 1)
+                            ParameterSlider(label: "Max Volume", value: $accordion.maxVolume, range: 0...1, fractionDigits: 2)
+                        }
+                        Section("Reeds") {
+                            ParameterSlider(label: "Detune", value: $accordion.detuneCents, range: 0...28, unit: "cents", fractionDigits: 1)
+                            ParameterSlider(label: "Brightness", value: $accordion.brightness, range: 0...1, fractionDigits: 2)
+                            ParameterSlider(label: "Bass Mix", value: $accordion.bassMix, range: 0...0.6, fractionDigits: 2)
+                        }
+                        Section("Musette") {
+                            ParameterSlider(label: "Rate", value: $accordion.tremoloRate, range: 0...12, unit: "Hz", fractionDigits: 1)
+                            ParameterSlider(label: "Depth", value: $accordion.tremoloDepth, range: 0...0.35, fractionDigits: 2)
+                        }
+                        Section("Ramping") {
+                            ParameterSlider(label: "Note", value: $accordion.noteRampMs, range: 5...160, unit: "ms", fractionDigits: 0)
+                            ParameterSlider(label: "Volume", value: $accordion.volumeRampMs, range: 10...500, unit: "ms", fractionDigits: 0)
+                        }
                     case .creak:
                         Section("Velocity") {
                             ParameterSlider(label: "Full Volume", value: $creak.velocityFull, range: 1...100, unit: "deg/s", fractionDigits: 0)
@@ -134,8 +159,4 @@ struct ContentView: View {
         .frame(minWidth: 800, minHeight: 400)
         .frame(idealWidth: 900, idealHeight: 667)
     }
-}
-
-#Preview {
-    ContentView()
 }

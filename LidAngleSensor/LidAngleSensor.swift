@@ -8,8 +8,15 @@
 import IOKit
 import SwiftUI
 
+private struct LidAngleSensorKey: EnvironmentKey {
+    static let defaultValue = LidAngleSensor()
+}
+
 extension EnvironmentValues {
-    @Entry var lidAngleSensor: LidAngleSensor = .init()
+    var lidAngleSensor: LidAngleSensor {
+        get { self[LidAngleSensorKey.self] }
+        set { self[LidAngleSensorKey.self] = newValue }
+    }
 }
 
 // MARK: - Sensor
@@ -175,11 +182,11 @@ final class LidAngleSensor {
         if abs(delta) < Self.movementThreshold {
             instantVelocity = 0
         } else {
-            instantVelocity = abs(delta / dt)
+            instantVelocity = delta / dt
             lastAngle = smoothedAngle
         }
         
-        if instantVelocity > 0 {
+        if instantVelocity != 0 {
             smoothedVelocity =
             Self.velocitySmoothingFactor * instantVelocity
             + (1 - Self.velocitySmoothingFactor) * smoothedVelocity

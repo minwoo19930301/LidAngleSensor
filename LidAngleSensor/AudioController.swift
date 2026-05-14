@@ -7,8 +7,16 @@
 
 import SwiftUI
 
+@MainActor
+private struct AudioControllerKey: EnvironmentKey {
+    static let defaultValue = AudioController()
+}
+
 extension EnvironmentValues {
-    @Entry var audioController: AudioController = .init()
+    var audioController: AudioController {
+        get { self[AudioControllerKey.self] }
+        set { self[AudioControllerKey.self] = newValue }
+    }
 }
 
 @MainActor
@@ -19,7 +27,7 @@ final class AudioController {
     
     private(set) var isPlaying = false
     
-    var mode: AudioMode = .creak {
+    var mode: AudioMode = .accordion {
         didSet {
             guard oldValue != mode else { return }
             modeDidChange(from: oldValue)
@@ -30,6 +38,7 @@ final class AudioController {
     
     let creakEngine = CreakAudioEngine()
     let thereminEngine = ThereminAudioEngine()
+    let accordionEngine = AccordionAudioEngine()
     
     // MARK: Control
     
@@ -45,6 +54,8 @@ final class AudioController {
     func feed(angle: Double, velocity: Double) {
         guard isPlaying else { return }
         switch mode {
+        case .accordion:
+            accordionEngine.update(angle: angle, velocity: velocity)
         case .creak:
             creakEngine.update(velocity: velocity)
         case .theremin:
@@ -58,6 +69,7 @@ final class AudioController {
     
     private func engine(for mode: AudioMode) -> any AudioEngineProtocol {
         switch mode {
+        case .accordion: accordionEngine
         case .creak:    creakEngine
         case .theremin: thereminEngine
         }
