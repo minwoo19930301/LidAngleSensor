@@ -1,3 +1,4 @@
 /build
+/dist
 .DS_Store
-/LidAngleSensor.xcodeproj/project.xcworkspace/xcuserdata
+/MacBookAccordion.xcodeproj/project.xcworkspace/xcuserdata
