@@ -1,6 +1,6 @@
 //
-//  LidAngleSensor.swift
-//  LidAngleSensor
+//  LidAngleReader.swift
+//  MacBookAccordion
 //
 //  Created by Sam on 2026-03-22.
 //
@@ -8,21 +8,21 @@
 import IOKit
 import SwiftUI
 
-private struct LidAngleSensorKey: EnvironmentKey {
-    static let defaultValue = LidAngleSensor()
+private struct LidAngleReaderKey: EnvironmentKey {
+    static let defaultValue = LidAngleReader()
 }
 
 extension EnvironmentValues {
-    var lidAngleSensor: LidAngleSensor {
-        get { self[LidAngleSensorKey.self] }
-        set { self[LidAngleSensorKey.self] = newValue }
+    var lidAngleReader: LidAngleReader {
+        get { self[LidAngleReaderKey.self] }
+        set { self[LidAngleReaderKey.self] = newValue }
     }
 }
 
 // MARK: - Sensor
 
 @Observable
-final class LidAngleSensor {
+final class LidAngleReader {
     
     // MARK: Published State
     
@@ -90,7 +90,7 @@ final class LidAngleSensor {
         if case .foundStandard(let device) = diag.probeResult {
             hidDevice = device
             isAvailable = true
-            // Device is opened in start(), not here. Temporary LidAngleSensor instances
+            // Device is opened in start(), not here. Temporary LidAngleReader instances
             // that SwiftUI creates (and discards) as @State initial-value expressions must
             // never touch the device handle; otherwise their deinit would close it out from
             // under the real sensor instance.

@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		EA5683CC2F704306005813E9 /* LidAngleSensor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LidAngleSensor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA5683CC2F704306005813E9 /* MacBookAccordion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacBookAccordion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EA86024B2F70674B006888A6 /* Exceptions for "LidAngleSensor" folder in "LidAngleSensor" target */ = {
+		EA86024B2F70674B006888A6 /* Exceptions for "MacBookAccordion" folder in "MacBookAccordion" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = EA5683CB2F704306005813E9 /* LidAngleSensor */;
+			target = EA5683CB2F704306005813E9 /* MacBookAccordion */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		EA5683CE2F704306005813E9 /* LidAngleSensor */ = {
+		EA5683CE2F704306005813E9 /* MacBookAccordion */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EA86024B2F70674B006888A6 /* Exceptions for "LidAngleSensor" folder in "LidAngleSensor" target */,
+				EA86024B2F70674B006888A6 /* Exceptions for "MacBookAccordion" folder in "MacBookAccordion" target */,
 			);
-			path = LidAngleSensor;
+			path = MacBookAccordion;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		EA5683C32F704306005813E9 = {
 			isa = PBXGroup;
 			children = (
-				EA5683CE2F704306005813E9 /* LidAngleSensor */,
+				EA5683CE2F704306005813E9 /* MacBookAccordion */,
 				EA5683CD2F704306005813E9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		EA5683CD2F704306005813E9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				EA5683CC2F704306005813E9 /* LidAngleSensor.app */,
+				EA5683CC2F704306005813E9 /* MacBookAccordion.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		EA5683CB2F704306005813E9 /* LidAngleSensor */ = {
+		EA5683CB2F704306005813E9 /* MacBookAccordion */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EA5683D72F704307005813E9 /* Build configuration list for PBXNativeTarget "LidAngleSensor" */;
+			buildConfigurationList = EA5683D72F704307005813E9 /* Build configuration list for PBXNativeTarget "MacBookAccordion" */;
 			buildPhases = (
 				EA5683C82F704306005813E9 /* Sources */,
 				EA5683C92F704306005813E9 /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				EA5683CE2F704306005813E9 /* LidAngleSensor */,
+				EA5683CE2F704306005813E9 /* MacBookAccordion */,
 			);
-			name = LidAngleSensor;
+			name = MacBookAccordion;
 			packageProductDependencies = (
 			);
-			productName = LidAngleSensor;
-			productReference = EA5683CC2F704306005813E9 /* LidAngleSensor.app */;
+			productName = MacBookAccordion;
+			productReference = EA5683CC2F704306005813E9 /* MacBookAccordion.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = EA5683C72F704306005813E9 /* Build configuration list for PBXProject "LidAngleSensor" */;
+			buildConfigurationList = EA5683C72F704306005813E9 /* Build configuration list for PBXProject "MacBookAccordion" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				EA5683CB2F704306005813E9 /* LidAngleSensor */,
+				EA5683CB2F704306005813E9 /* MacBookAccordion */,
 			);
 		};
 /* End PBXProject section */
@@ -270,7 +270,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = LidAngleSensor/Info.plist;
+				INFOPLIST_FILE = MacBookAccordion/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "MacBook Accordion";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -280,7 +280,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = gold.samhenri.LidAngleSensor;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minwoo19930301.MacBookAccordion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -304,7 +304,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = LidAngleSensor/Info.plist;
+				INFOPLIST_FILE = MacBookAccordion/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "MacBook Accordion";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -314,7 +314,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = gold.samhenri.LidAngleSensor;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minwoo19930301.MacBookAccordion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -329,7 +329,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		EA5683C72F704306005813E9 /* Build configuration list for PBXProject "LidAngleSensor" */ = {
+		EA5683C72F704306005813E9 /* Build configuration list for PBXProject "MacBookAccordion" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EA5683D52F704307005813E9 /* Debug */,
@@ -338,7 +338,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EA5683D72F704307005813E9 /* Build configuration list for PBXNativeTarget "LidAngleSensor" */ = {
+		EA5683D72F704307005813E9 /* Build configuration list for PBXNativeTarget "MacBookAccordion" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EA5683D82F704307005813E9 /* Debug */,

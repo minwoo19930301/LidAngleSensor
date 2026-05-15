@@ -1,81 +1,37 @@
 # MacBook Accordion
 
-This is a fork of Sam Gold's Lid Angle Sensor app that turns a MacBook lid into
-a tiny accordion-style instrument.
+MacBook Accordion turns the lid angle sensor in newer MacBooks into a tiny
+accordion-style instrument.
 
-Move the lid to choose a note, then hold Space to let the note sound. Releasing
-Space mutes the reeds, so you can move through silent notes and only play the
+Move the lid to choose a note, then hold Space to let the reeds sound. Releasing
+Space mutes the audio, so you can silently move through notes and only play the
 ones you want.
 
-## Accordion fork notes
+This is a personal fork of Sam Gold's original lid angle sensor experiment:
+https://github.com/samhenrigold/LidAngleSensor
 
-This local fork turns the app into a tiny MacBook accordion. The lid angle
-selects stepped notes, holding Space opens the air gate, and lid movement adds
-bellows expression through detuned reed oscillators with tremolo.
+## Features
 
-## FAQ
+- Lid angle selects stepped notes.
+- Space acts like an air button.
+- Lid motion adds bellows expression.
+- Detuned reed oscillators and tremolo create the accordion tone.
+- Tone controls adjust air pressure, detune, brightness, bass mix, and tremolo.
 
-**What is a lid angle sensor?**
+## Compatibility
 
-Despite what the name would have you believe, it is a sensor that detects the angle of the lid.
-
-**Which devices have a lid angle sensor?**
-
-It was introduced with the 2019 16-inch MacBook Pro. If your laptop is newer, you probably have it. [People have reported](https://github.com/samhenrigold/LidAngleSensor/issues/13) that it **does not work on M1/M2 devices**, I have not yet figured out a fix.
-
-**My laptop should have it, why doesn't it show up?**
-
-I've only tested this on my M4 MacBook Pro and have hard-coded it to look for a specific sensor. If that doesn't work, try running [this script](https://gist.github.com/samhenrigold/42b5a92d1ee8aaf2b840be34bff28591) and report the output in [an issue](https://github.com/samhenrigold/LidAngleSensor/issues/new/choose).
-
-Known problematic models:
-
-- M1 MacBook Air (the wedge-shaped one)
-- M1/M2 MacBook Pro with Touch Bar
-
-**Can I use this on my iMac?**
-
-~~Not yet tested. Feel free to slam your computer into your desk and make a PR with your results.~~
-
-[It totally works](https://github.com/samhenrigold/LidAngleSensor/issues/33). If it doesn't work for you, try slamming your computer harder?
-
-**Why?**
-
-~~A lot of free time. I'm open to full-time work in NYC or remote. I'm a designer/design-engineer.~~ https://samhenri.gold
-
-I am now employed but I'm still doing this for the love of the game.
-
-**No I mean like why does my laptop need to know the exact angle of its lid?**
-
-Oh. I don't know.
-
-**Can I contribute?**
-
-I guess.
-
-**How come the audio feels kind of...weird?**
-
-I'm bad at audio.
-
-**Where did the sound effect come from?**
-
-LEGO Batman 3: Beyond Gotham. But you knew that already.
-
-**Can I turn off the sound?**
-
-Yes, never click "Start Audio". But this energy isn't encouraged.
+The underlying sensor was introduced with the 2019 16-inch MacBook Pro. Newer
+MacBooks are more likely to work, though some M1/M2 models have known issues in
+the upstream project.
 
 ## Building
 
-According to [this issue](https://github.com/samhenrigold/LidAngleSensor/issues/12), building requires having Xcode installed. I've only tested this on Xcode 26. YMMV.
+Open `MacBookAccordion.xcodeproj` in Xcode and build the `MacBookAccordion`
+target.
 
-## Installation
-
-Via Homebrew:
+This local checkout has also been verified with Swift typechecking from the
+command line:
 
 ```shell
-brew install lidanglesensor
+rg --files -g '*.swift' | xargs swiftc -typecheck -swift-version 6 -default-isolation MainActor -target arm64-apple-macosx14.0
 ```
-
-## Related projects
-
-- [Python library that taps into this sensor](https://github.com/tcsenpai/pybooklid)

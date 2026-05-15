@@ -1,6 +1,6 @@
 //
 //  AudioEngineHelpers.swift
-//  LidAngleSensor
+//  MacBookAccordion
 //
 //  Created by Sam on 2026-03-22.
 //

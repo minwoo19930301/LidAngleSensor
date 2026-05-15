@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  LidAngleSensor
+//  MacBookAccordion
 //
 //  Created by Sam on 2026-03-22.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 struct ContentView: View {
-    @Environment(\.lidAngleSensor) private var sensor
+    @Environment(\.lidAngleReader) private var sensor
     @Environment(\.audioController) private var audioController
 
     @State private var inspectorShown = false

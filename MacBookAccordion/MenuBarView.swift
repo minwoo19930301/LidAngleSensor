@@ -1,6 +1,6 @@
 //
 //  MenuBarView.swift
-//  LidAngleSensor
+//  MacBookAccordion
 //
 //  Created by Sam on 2026-03-22.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MenuBarView: View {
-    @Environment(\.lidAngleSensor) private var sensor
+    @Environment(\.lidAngleReader) private var sensor
     @Environment(\.audioController) private var audioController
     
     var body: some View {
