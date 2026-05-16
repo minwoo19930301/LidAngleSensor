@@ -6,22 +6,17 @@
 //
 
 import SwiftUI
-import AppKit
-import ApplicationServices
 
 struct ContentView: View {
     @Environment(\.lidAngleReader) private var sensor
+    @Environment(\.ambientLightReader) private var lightSensor
     @Environment(\.audioController) private var audioController
 
     @State private var inspectorShown = false
-    @State private var localKeyMonitor: Any?
-    @State private var globalKeyMonitor: Any?
-    @State private var isGlobalKeyboardAccessEnabled = AXIsProcessTrusted()
-
-    private static let spaceKeyCode: UInt16 = 49
 
     var body: some View {
         @Bindable var accordion = audioController.accordionEngine
+        @Bindable var light = lightSensor
 
         NavigationStack {
             VStack(spacing: 26) {
@@ -33,7 +28,7 @@ struct ContentView: View {
                         Text(audioController.accordionEngine.noteName)
                             .font(.system(size: 138, weight: .thin, design: .rounded))
                             .monospacedDigit()
-                            .foregroundStyle(audioController.isSounding ? .green : (audioController.isSpaceHeld ? .orange : .blue))
+                            .foregroundStyle(audioController.isSounding ? .green : (audioController.isGateOpen ? .orange : .blue))
                     }
                     
                     AccordionBellowsView(
@@ -42,11 +37,17 @@ struct ContentView: View {
                     )
                     .frame(width: 360, height: 92)
                     
-                    HStack(spacing: 12) {
-                        KeycapView(text: "Space")
-                        Text(statusText)
-                            .font(.headline)
-                            .foregroundStyle(audioController.isSounding ? .green : (audioController.isSpaceHeld ? .orange : .secondary))
+                    HStack(spacing: 14) {
+                        GateBadgeView(isCovered: lightSensor.isCovered)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(statusText)
+                                .font(.headline)
+                                .foregroundStyle(audioController.isSounding ? .green : (audioController.isGateOpen ? .orange : .secondary))
+                            Text("\(Int(lightSensor.lux.rounded())) lux")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     
                     HStack(spacing: 18) {
@@ -72,18 +73,19 @@ struct ContentView: View {
             .monospacedDigit()
             .onAppear {
                 sensor.start()
+                lightSensor.start()
                 audioController.start()
-                installKeyMonitors()
             }
             .onDisappear {
-                removeKeyMonitors()
+                lightSensor.stop()
+                audioController.setGateOpen(false)
                 audioController.stop()
             }
             .onChange(of: sensor.tick) {
                 audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
             }
-            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                refreshGlobalKeyboardAccess(prompt: false)
+            .onChange(of: lightSensor.tick) {
+                audioController.setGateOpen(lightSensor.isCovered)
             }
             .toolbar {
                 ToolbarItemGroup {
@@ -99,28 +101,15 @@ struct ContentView: View {
                     Section("Status") {
                         LabeledContent("Note", value: audioController.accordionEngine.noteName)
                         LabeledContent("Direction", value: audioController.accordionEngine.directionName)
-                        LabeledContent("Space", value: audioController.isSpaceHeld ? "Held" : "Up")
-                        LabeledContent("Background Space", value: isGlobalKeyboardAccessEnabled ? "Enabled" : "Needs Accessibility")
+                        LabeledContent("Camera Area", value: lightSensor.isCovered ? "Covered" : "Open")
+                        LabeledContent("Ambient Light", value: lightSensor.lux, format: .number.precision(.fractionLength(0)))
                         LabeledContent("Last Played", value: audioController.lastTriggeredNoteName)
                         LabeledContent("Burst", value: audioController.accordionEngine.bellows, format: .number.precision(.fractionLength(2)))
                         LabeledContent("Volume", value: audioController.accordionEngine.volume, format: .number.precision(.fractionLength(2)))
                     }
 
-                    if !isGlobalKeyboardAccessEnabled {
-                        Section("Keyboard Access") {
-                            Button("Open Accessibility Settings") {
-                                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                                    NSWorkspace.shared.open(url)
-                                }
-                            }
-
-                            Button("Check Again") {
-                                refreshGlobalKeyboardAccess(prompt: false)
-                            }
-                        }
-                    }
-
                     Section("Trigger") {
+                        ParameterSlider(label: "Cover Threshold", value: $light.coverThreshold, range: 1...120, unit: "lux", fractionDigits: 0)
                         ParameterSlider(label: "Base Hit", value: $accordion.keyPressure, range: 0.1...1.0, fractionDigits: 2)
                         ParameterSlider(label: "Motion Boost", value: $accordion.velocityFull, range: 8...160, unit: "deg/s", fractionDigits: 0)
                         ParameterSlider(label: "Deadzone", value: $accordion.velocityDeadzone, range: 0...8, unit: "deg/s", fractionDigits: 1)
@@ -148,78 +137,21 @@ struct ContentView: View {
                     }
                 }
                 .inspectorColumnWidth(min: 220, ideal: 260, max: 340)
-                .disabled(!sensor.isAvailable)
+                .disabled(!sensor.isAvailable || !lightSensor.isAvailable)
             }
         }
         .frame(minWidth: 800, minHeight: 400)
         .frame(idealWidth: 900, idealHeight: 667)
     }
 
-    private func installKeyMonitors() {
-        guard localKeyMonitor == nil, globalKeyMonitor == nil else { return }
-
-        refreshGlobalKeyboardAccess(prompt: true)
-
-        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
-            guard event.keyCode == Self.spaceKeyCode else { return event }
-            handleSpaceKey(isDown: event.type == .keyDown, isRepeat: event.isARepeat)
-            return nil
-        }
-
-        globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
-            guard event.keyCode == Self.spaceKeyCode else { return }
-            let isDown = event.type == .keyDown
-            let isRepeat = event.isARepeat
-
-            Task { @MainActor in
-                handleSpaceKey(isDown: isDown, isRepeat: isRepeat)
-            }
-        }
-    }
-
-    private func removeKeyMonitors() {
-        if let localKeyMonitor {
-            NSEvent.removeMonitor(localKeyMonitor)
-            self.localKeyMonitor = nil
-        }
-
-        if let globalKeyMonitor {
-            NSEvent.removeMonitor(globalKeyMonitor)
-            self.globalKeyMonitor = nil
-        }
-
-        audioController.setSpaceHeld(false)
-    }
-
-    private func handleSpaceKey(isDown: Bool, isRepeat: Bool) {
-        if isDown, isRepeat {
-            return
-        }
-        audioController.setSpaceHeld(isDown)
-    }
-
-    @discardableResult
-    private func refreshGlobalKeyboardAccess(prompt: Bool) -> Bool {
-        let isTrusted: Bool
-        if prompt {
-            let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
-            isTrusted = AXIsProcessTrustedWithOptions(options)
-        } else {
-            isTrusted = AXIsProcessTrusted()
-        }
-
-        isGlobalKeyboardAccessEnabled = isTrusted
-        return isTrusted
-    }
-
     private var statusText: String {
         if audioController.isSounding {
             return "Note changed"
         }
-        if audioController.isSpaceHeld {
+        if audioController.isGateOpen {
             return "Move lid to trigger"
         }
-        return "Hold Space, then move"
+        return lightSensor.isAvailable ? "Cover camera area" : "Light sensor unavailable"
     }
 }
 
@@ -259,18 +191,18 @@ private struct AccordionBellowsView: View {
     }
 }
 
-private struct KeycapView: View {
-    let text: String
+private struct GateBadgeView: View {
+    let isCovered: Bool
 
     var body: some View {
-        Text(text)
-            .font(.headline.monospaced())
-            .padding(.horizontal, 18)
-            .padding(.vertical, 8)
+        Image(systemName: isCovered ? "camera.metering.center.weighted" : "camera.fill")
+            .font(.system(size: 24, weight: .semibold))
+            .foregroundStyle(isCovered ? .orange : .secondary)
+            .frame(width: 48, height: 48)
             .background(.quaternary)
-            .clipShape(RoundedRectangle(cornerRadius: 7))
+            .clipShape(Circle())
             .overlay {
-                RoundedRectangle(cornerRadius: 7)
+                Circle()
                     .stroke(.secondary.opacity(0.4), lineWidth: 1)
             }
     }

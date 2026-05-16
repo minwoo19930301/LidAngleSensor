@@ -10,12 +10,14 @@ import SwiftUI
 @main
 struct MacBookAccordionApp: App {
     @State private var sensor = LidAngleReader()
+    @State private var lightSensor = AmbientLightReader()
     @State private var audioController = AudioController()
     
     var body: some Scene {
         Window("MacBook Accordion", id: "main") {
             ContentView()
                 .environment(\.lidAngleReader, sensor)
+                .environment(\.ambientLightReader, lightSensor)
                 .environment(\.audioController, audioController)
                 .onAppear {
                     NSWindow.allowsAutomaticWindowTabbing = false
@@ -33,6 +35,7 @@ struct MacBookAccordionApp: App {
         MenuBarExtra {
             MenuBarView()
                 .environment(\.lidAngleReader, sensor)
+                .environment(\.ambientLightReader, lightSensor)
                 .environment(\.audioController, audioController)
         } label: {
             Image(systemName: "music.note")

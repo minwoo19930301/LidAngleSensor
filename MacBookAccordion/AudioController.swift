@@ -27,7 +27,7 @@ final class AudioController {
     
     private(set) var isReady = false
     private(set) var isSounding = false
-    private(set) var isSpaceHeld = false
+    private(set) var isGateOpen = false
     private(set) var lastTriggeredNoteName = "C4"
 
     private var currentNoteIndex: Int?
@@ -46,15 +46,15 @@ final class AudioController {
 
     func stop() {
         guard isReady else { return }
-        setSpaceHeld(false)
+        setGateOpen(false)
         accordionEngine.stop()
         isReady = false
     }
 
-    func setSpaceHeld(_ isSpaceHeld: Bool) {
-        guard self.isSpaceHeld != isSpaceHeld else { return }
-        self.isSpaceHeld = isSpaceHeld
-        if !isSpaceHeld {
+    func setGateOpen(_ isGateOpen: Bool) {
+        guard self.isGateOpen != isGateOpen else { return }
+        self.isGateOpen = isGateOpen
+        if !isGateOpen {
             isSounding = false
             accordionEngine.mute()
         }
@@ -67,7 +67,7 @@ final class AudioController {
         let changedNote = currentNoteIndex.map { $0 != noteIndex } ?? false
         currentNoteIndex = noteIndex
 
-        let shouldTrigger = isSpaceHeld && changedNote
+        let shouldTrigger = isGateOpen && changedNote
         accordionEngine.update(angle: angle, velocity: velocity, trigger: shouldTrigger)
 
         if shouldTrigger {

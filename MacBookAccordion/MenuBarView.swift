@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Environment(\.lidAngleReader) private var sensor
+    @Environment(\.ambientLightReader) private var lightSensor
     @Environment(\.audioController) private var audioController
     
     var body: some View {
@@ -19,10 +20,11 @@ struct MenuBarView: View {
         Section {
             Text("MacBook Accordion")
             Text("Note: \(audioController.accordionEngine.noteName)")
-            Text(audioController.isSpaceHeld ? "Space held" : "Ready")
+            Text(lightSensor.isCovered ? "Camera covered" : "Cover camera area")
+            Text("Light: \(Int(lightSensor.lux.rounded())) lux")
             Text(audioController.isSounding ? "Note changed" : "Waiting for movement")
         }
-        .disabled(!sensor.isAvailable)
+        .disabled(!sensor.isAvailable || !lightSensor.isAvailable)
         
         Button("Quit") {
             NSApplication.shared.terminate(nil)

@@ -1,14 +1,14 @@
 # MacBook Accordion
 
-![A person holding a MacBook like an accordion, pressing Space while opening and closing the lid.](assets/macbook-accordion-usage.png)
+![A person holding a MacBook like an accordion while covering the camera area.](assets/macbook-accordion-usage.png)
 
 MacBook Accordion turns the lid angle sensor in newer MacBooks into a tiny
 accordion-style instrument.
 
-Hold Space, then open and close the MacBook lid like bellows. The lid angle
-chooses the note, and Space works like the air button: pressing Space alone is
-silent, and a note only plays when the lid crosses into a different note while
-Space is held.
+Cover the camera area, then open and close the MacBook lid like bellows. The lid
+angle chooses the note, and the ambient light sensor works like the air button:
+covering the camera area alone is silent, and a note only plays when the lid
+crosses into a different note while the sensor is covered.
 
 This is a personal fork of Sam Gold's original lid angle sensor experiment:
 https://github.com/samhenrigold/LidAngleSensor
@@ -18,7 +18,7 @@ https://github.com/samhenrigold/LidAngleSensor
 The easiest install path is the hosted DMG on GitHub Releases:
 
 1. Open the [latest release](https://github.com/minwoo19930301/macbook-accordion/releases/latest).
-2. Download `MacBookAccordion-0.1.1.dmg`.
+2. Download `MacBookAccordion-0.1.2.dmg`.
 3. Open the DMG.
 4. Drag `MacBook Accordion.app` into `Applications`.
 5. Quit any older copy of the app, then launch `MacBook Accordion`.
@@ -30,24 +30,25 @@ open normally.
 ## How To Play
 
 1. Open `MacBook Accordion`.
-2. Hold the Space bar.
-3. While holding Space, grip the keyboard body and display with both hands.
+2. Cover the camera area with a finger or tape.
+3. While covering it, grip the keyboard body and display with both hands.
 4. Open and close the lid sideways like an accordion.
-5. Release Space whenever you want to move silently without playing a note.
+5. Uncover the camera area whenever you want to move silently without playing a
+   note.
 
-There is no Play button. The app is always ready, but Space only arms the next
-note change. If you want Space to work while another app is focused, grant
-`MacBook Accordion` permission in System Settings > Privacy & Security >
-Accessibility, then quit and relaunch the app. Without that permission, Space
-only works while the app window is focused.
+There is no Play button. The app is always ready, but covering the camera area
+only arms the next note change. The app reads the ambient light sensor's lux
+value, not camera video, so this works while another app is focused and does not
+need camera or keyboard permissions.
 
 ## Features
 
 - Lid angle selects stepped notes.
-- Space acts like an air button and does not play by itself.
+- Covering the camera area acts like an air button and does not play by itself.
 - Lid motion adds bellows expression.
 - Detuned reed oscillators and tremolo create the accordion tone.
-- Tone controls adjust air pressure, detune, brightness, bass mix, and tremolo.
+- Tone controls adjust cover threshold, air pressure, detune, brightness, bass
+  mix, and tremolo.
 
 ## Compatibility
 
@@ -73,10 +74,10 @@ Then build the `MacBookAccordion` target in Xcode.
 You can also create a local universal DMG from the command line:
 
 ```shell
-./scripts/package_dmg.sh 0.1.1
+./scripts/package_dmg.sh 0.1.2
 ```
 
-The DMG will be written to `dist/MacBookAccordion-0.1.1.dmg`.
+The DMG will be written to `dist/MacBookAccordion-0.1.2.dmg`.
 
 This local checkout has also been verified with Swift typechecking:
 
