@@ -6,8 +6,9 @@ MacBook Accordion turns the lid angle sensor in newer MacBooks into a tiny
 accordion-style instrument.
 
 Hold Space, then open and close the MacBook lid like bellows. The lid angle
-chooses the note, and Space works like the air button: release Space to mute,
-move silently to another note, then hold Space again to play.
+chooses the note, and Space works like the air button: pressing Space alone is
+silent, and a note only plays when the lid crosses into a different note while
+Space is held.
 
 This is a personal fork of Sam Gold's original lid angle sensor experiment:
 https://github.com/samhenrigold/LidAngleSensor
@@ -17,10 +18,10 @@ https://github.com/samhenrigold/LidAngleSensor
 The easiest install path is the hosted DMG on GitHub Releases:
 
 1. Open the [latest release](https://github.com/minwoo19930301/macbook-accordion/releases/latest).
-2. Download `MacBookAccordion-0.1.0.dmg`.
+2. Download `MacBookAccordion-0.1.1.dmg`.
 3. Open the DMG.
 4. Drag `MacBook Accordion.app` into `Applications`.
-5. Launch `MacBook Accordion`.
+5. Quit any older copy of the app, then launch `MacBook Accordion`.
 
 This is a personal unsigned build. If macOS blocks the first launch, Control-click
 `MacBook Accordion.app`, choose `Open`, then confirm once. After that it should
@@ -34,13 +35,16 @@ open normally.
 4. Open and close the lid sideways like an accordion.
 5. Release Space whenever you want to move silently without playing a note.
 
-There is no Play button. The app is always ready; Space decides when sound comes
-out.
+There is no Play button. The app is always ready, but Space only arms the next
+note change. If you want Space to work while another app is focused, grant
+`MacBook Accordion` permission in System Settings > Privacy & Security >
+Accessibility, then quit and relaunch the app. Without that permission, Space
+only works while the app window is focused.
 
 ## Features
 
 - Lid angle selects stepped notes.
-- Space acts like an air button.
+- Space acts like an air button and does not play by itself.
 - Lid motion adds bellows expression.
 - Detuned reed oscillators and tremolo create the accordion tone.
 - Tone controls adjust air pressure, detune, brightness, bass mix, and tremolo.
@@ -69,10 +73,10 @@ Then build the `MacBookAccordion` target in Xcode.
 You can also create a local universal DMG from the command line:
 
 ```shell
-./scripts/package_dmg.sh 0.1.0
+./scripts/package_dmg.sh 0.1.1
 ```
 
-The DMG will be written to `dist/MacBookAccordion-0.1.0.dmg`.
+The DMG will be written to `dist/MacBookAccordion-0.1.1.dmg`.
 
 This local checkout has also been verified with Swift typechecking:
 

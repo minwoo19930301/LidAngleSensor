@@ -15,6 +15,7 @@ final class AccordionAudioEngine: AudioEngineProtocol {
     private(set) var bellows = Double.zero
     private(set) var noteName = "C4"
     private(set) var directionName = "Pull"
+    private(set) var isAudible = false
 
     private let engine = AVAudioEngine()
     private var sourceNode: AVAudioSourceNode?
@@ -43,6 +44,8 @@ final class AccordionAudioEngine: AudioEngineProtocol {
     private var targetVolume = Double.zero
     private var targetPushPullTone = 1.0
     private var lastRampTime: TimeInterval = 0
+    private var noteTriggerStartTime: TimeInterval?
+    private var noteTriggerPeakVolume = Double.zero
 
     // MARK: Parameters
 
@@ -57,6 +60,7 @@ final class AccordionAudioEngine: AudioEngineProtocol {
     var bassMix = 0.22
     var noteRampMs = 24.0
     var volumeRampMs = 95.0
+    var noteBurstMs = 360.0
 
     private static let minAngle = 7.0
     private static let maxAngle = 135.0
@@ -109,6 +113,8 @@ final class AccordionAudioEngine: AudioEngineProtocol {
         volume = 0
         bellows = 0
         renderVolume = 0
+        isAudible = false
+        noteTriggerStartTime = nil
     }
 
     // MARK: Reset
@@ -125,29 +131,35 @@ final class AccordionAudioEngine: AudioEngineProtocol {
         bassMix = 0.22
         noteRampMs = 24.0
         volumeRampMs = 95.0
+        noteBurstMs = 360.0
     }
 
     // MARK: Parameter Update
 
-    func update(angle: Double, velocity: Double, isGateOpen: Bool) {
+    func noteIndex(forAngle angle: Double) -> Int {
         let normalizedAngle = min(1, max(0, (angle - Self.minAngle) / (Self.maxAngle - Self.minAngle)))
-        let noteIndex = min(Self.scaleMidi.count - 1, max(0, Int((normalizedAngle * Double(Self.scaleMidi.count - 1)).rounded())))
+        return min(Self.scaleMidi.count - 1, max(0, Int((normalizedAngle * Double(Self.scaleMidi.count - 1)).rounded())))
+    }
+
+    func update(angle: Double, velocity: Double, trigger: Bool) {
+        let noteIndex = noteIndex(forAngle: angle)
         let midi = Self.scaleMidi[noteIndex]
         targetFrequency = Self.frequency(forMIDINote: midi)
         targetBassFrequency = Self.frequency(forMIDINote: midi - 12)
         noteName = Self.noteName(forMIDINote: midi)
 
         let speed = abs(velocity)
-        if !isGateOpen {
-            bellows = 0
-            targetVolume = 0
-        } else {
+        if trigger {
             let t = speed <= velocityDeadzone
                 ? 0
                 : min(1, max(0, (speed - velocityDeadzone) / max(1, velocityFull - velocityDeadzone)))
             let shaped = t * t * (3 - 2 * t)
             bellows = min(1, keyPressure + shaped * (1 - keyPressure))
-            targetVolume = bellows * maxVolume
+            noteTriggerPeakVolume = bellows * maxVolume
+            targetVolume = noteTriggerPeakVolume
+            noteTriggerStartTime = CACurrentMediaTime()
+        } else if !isAudible {
+            bellows = 0
         }
 
         if velocity < -velocityDeadzone {
@@ -166,8 +178,23 @@ final class AccordionAudioEngine: AudioEngineProtocol {
         let dt = lastRampTime == 0 ? 0.016 : now - lastRampTime
         lastRampTime = now
 
+        if let noteTriggerStartTime {
+            let elapsedMs = (now - noteTriggerStartTime) * 1000
+            if elapsedMs >= noteBurstMs {
+                targetVolume = 0
+            }
+            if elapsedMs >= noteBurstMs + volumeRampMs, volume < 0.003 {
+                self.noteTriggerStartTime = nil
+                noteTriggerPeakVolume = 0
+                bellows = 0
+            }
+        } else {
+            targetVolume = 0
+        }
+
         frequency = frequency.ramped(toward: targetFrequency, dt: dt, tauMs: noteRampMs)
         volume = volume.ramped(toward: targetVolume, dt: dt, tauMs: volumeRampMs)
+        isAudible = volume > 0.01 || targetVolume > 0.01
 
         renderFrequency = frequency
         renderBassFrequency = renderBassFrequency.ramped(toward: targetBassFrequency, dt: dt, tauMs: noteRampMs)

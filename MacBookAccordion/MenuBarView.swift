@@ -19,7 +19,8 @@ struct MenuBarView: View {
         Section {
             Text("MacBook Accordion")
             Text("Note: \(audioController.accordionEngine.noteName)")
-            Text(audioController.isSounding ? "Playing" : "Ready")
+            Text(audioController.isSpaceHeld ? "Space held" : "Ready")
+            Text(audioController.isSounding ? "Note changed" : "Waiting for movement")
         }
         .disabled(!sensor.isAvailable)
         

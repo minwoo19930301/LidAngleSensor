@@ -7,14 +7,18 @@
 
 import SwiftUI
 import AppKit
+import ApplicationServices
 
 struct ContentView: View {
     @Environment(\.lidAngleReader) private var sensor
     @Environment(\.audioController) private var audioController
 
     @State private var inspectorShown = false
-    @State private var keyDownMonitor: Any?
-    @State private var keyUpMonitor: Any?
+    @State private var localKeyMonitor: Any?
+    @State private var globalKeyMonitor: Any?
+    @State private var isGlobalKeyboardAccessEnabled = AXIsProcessTrusted()
+
+    private static let spaceKeyCode: UInt16 = 49
 
     var body: some View {
         @Bindable var accordion = audioController.accordionEngine
@@ -29,7 +33,7 @@ struct ContentView: View {
                         Text(audioController.accordionEngine.noteName)
                             .font(.system(size: 138, weight: .thin, design: .rounded))
                             .monospacedDigit()
-                            .foregroundStyle(audioController.isSounding ? .green : .blue)
+                            .foregroundStyle(audioController.isSounding ? .green : (audioController.isSpaceHeld ? .orange : .blue))
                     }
                     
                     AccordionBellowsView(
@@ -40,9 +44,9 @@ struct ContentView: View {
                     
                     HStack(spacing: 12) {
                         KeycapView(text: "Space")
-                        Text(audioController.isSounding ? "Playing" : "Hold to play")
+                        Text(statusText)
                             .font(.headline)
-                            .foregroundStyle(audioController.isSounding ? .green : .secondary)
+                            .foregroundStyle(audioController.isSounding ? .green : (audioController.isSpaceHeld ? .orange : .secondary))
                     }
                     
                     HStack(spacing: 18) {
@@ -78,6 +82,9 @@ struct ContentView: View {
             .onChange(of: sensor.tick) {
                 audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
             }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                refreshGlobalKeyboardAccess(prompt: false)
+            }
             .toolbar {
                 ToolbarItemGroup {
                     Button {
@@ -92,15 +99,33 @@ struct ContentView: View {
                     Section("Status") {
                         LabeledContent("Note", value: audioController.accordionEngine.noteName)
                         LabeledContent("Direction", value: audioController.accordionEngine.directionName)
-                        LabeledContent("Air", value: audioController.accordionEngine.bellows, format: .number.precision(.fractionLength(2)))
+                        LabeledContent("Space", value: audioController.isSpaceHeld ? "Held" : "Up")
+                        LabeledContent("Background Space", value: isGlobalKeyboardAccessEnabled ? "Enabled" : "Needs Accessibility")
+                        LabeledContent("Last Played", value: audioController.lastTriggeredNoteName)
+                        LabeledContent("Burst", value: audioController.accordionEngine.bellows, format: .number.precision(.fractionLength(2)))
                         LabeledContent("Volume", value: audioController.accordionEngine.volume, format: .number.precision(.fractionLength(2)))
                     }
 
-                    Section("Air") {
-                        ParameterSlider(label: "Key Pressure", value: $accordion.keyPressure, range: 0.1...1.0, fractionDigits: 2)
+                    if !isGlobalKeyboardAccessEnabled {
+                        Section("Keyboard Access") {
+                            Button("Open Accessibility Settings") {
+                                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+
+                            Button("Check Again") {
+                                refreshGlobalKeyboardAccess(prompt: false)
+                            }
+                        }
+                    }
+
+                    Section("Trigger") {
+                        ParameterSlider(label: "Base Hit", value: $accordion.keyPressure, range: 0.1...1.0, fractionDigits: 2)
                         ParameterSlider(label: "Motion Boost", value: $accordion.velocityFull, range: 8...160, unit: "deg/s", fractionDigits: 0)
                         ParameterSlider(label: "Deadzone", value: $accordion.velocityDeadzone, range: 0...8, unit: "deg/s", fractionDigits: 1)
                         ParameterSlider(label: "Max Volume", value: $accordion.maxVolume, range: 0...1, fractionDigits: 2)
+                        ParameterSlider(label: "Note Burst", value: $accordion.noteBurstMs, range: 80...900, unit: "ms", fractionDigits: 0)
                     }
                     Section("Reeds") {
                         ParameterSlider(label: "Detune", value: $accordion.detuneCents, range: 0...28, unit: "cents", fractionDigits: 1)
@@ -131,35 +156,70 @@ struct ContentView: View {
     }
 
     private func installKeyMonitors() {
-        guard keyDownMonitor == nil, keyUpMonitor == nil else { return }
+        guard localKeyMonitor == nil, globalKeyMonitor == nil else { return }
 
-        keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard event.keyCode == 49 else { return event }
-            if !event.isARepeat {
-                audioController.setSounding(true)
-                audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
-            }
+        refreshGlobalKeyboardAccess(prompt: true)
+
+        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
+            guard event.keyCode == Self.spaceKeyCode else { return event }
+            handleSpaceKey(isDown: event.type == .keyDown, isRepeat: event.isARepeat)
             return nil
         }
 
-        keyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
-            guard event.keyCode == 49 else { return event }
-            audioController.setSounding(false)
-            audioController.feed(angle: sensor.angle, velocity: sensor.velocity)
-            return nil
+        globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
+            guard event.keyCode == Self.spaceKeyCode else { return }
+            let isDown = event.type == .keyDown
+            let isRepeat = event.isARepeat
+
+            Task { @MainActor in
+                handleSpaceKey(isDown: isDown, isRepeat: isRepeat)
+            }
         }
     }
 
     private func removeKeyMonitors() {
-        if let keyDownMonitor {
-            NSEvent.removeMonitor(keyDownMonitor)
-            self.keyDownMonitor = nil
+        if let localKeyMonitor {
+            NSEvent.removeMonitor(localKeyMonitor)
+            self.localKeyMonitor = nil
         }
 
-        if let keyUpMonitor {
-            NSEvent.removeMonitor(keyUpMonitor)
-            self.keyUpMonitor = nil
+        if let globalKeyMonitor {
+            NSEvent.removeMonitor(globalKeyMonitor)
+            self.globalKeyMonitor = nil
         }
+
+        audioController.setSpaceHeld(false)
+    }
+
+    private func handleSpaceKey(isDown: Bool, isRepeat: Bool) {
+        if isDown, isRepeat {
+            return
+        }
+        audioController.setSpaceHeld(isDown)
+    }
+
+    @discardableResult
+    private func refreshGlobalKeyboardAccess(prompt: Bool) -> Bool {
+        let isTrusted: Bool
+        if prompt {
+            let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+            isTrusted = AXIsProcessTrustedWithOptions(options)
+        } else {
+            isTrusted = AXIsProcessTrusted()
+        }
+
+        isGlobalKeyboardAccessEnabled = isTrusted
+        return isTrusted
+    }
+
+    private var statusText: String {
+        if audioController.isSounding {
+            return "Note changed"
+        }
+        if audioController.isSpaceHeld {
+            return "Move lid to trigger"
+        }
+        return "Hold Space, then move"
     }
 }
 
